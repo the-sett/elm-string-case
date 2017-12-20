@@ -1,0 +1,16 @@
+{
+    "version": "1.0.0",
+    "summary": "A library for converting between camel-case, snake-case, kebab-case and so on.",
+    "repository": "https://github.com/the-sett/elm-string-case.git",
+    "license": "BSD3",
+    "source-directories": [
+        "./src"
+    ],
+    "exposed-modules": [
+        "String.Case"
+    ],
+    "dependencies": {
+        "elm-lang/core": "5.1.1 <= v < 6.0.0"
+    },
+    "elm-version": "0.18.0 <= v < 0.19.0"
+}
