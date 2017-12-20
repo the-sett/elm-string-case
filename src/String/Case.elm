@@ -1,6 +1,17 @@
-module String.Case exposing (..)
+module String.Case
+    exposing
+        ( convertCase
+        , toCamelCaseUpper
+        , toCamelCaseLower
+        , toSnakeCaseUpper
+        , toSnakeCaseLower
+        , toKebabCaseUpper
+        , toKebabCaseLower
+        )
 
 {-| String functions that are useful when working with source code.
+@docs convertCase, toCamelCaseUpper, toCamelCaseLower, toSnakeCaseUpper
+@docs toSnakeCaseLower, toKebabCaseUpper, toKebabCaseLower
 -}
 
 
@@ -38,6 +49,9 @@ The string is processed into words by these rules.
 6.  W after U or L is discarded and ends the current word.
 
 -}
+split : String -> List String
+split val =
+    []
 
 
 
@@ -125,35 +139,41 @@ The string is processed into words by these rules.
 
 {-| Converts a string to camel case with the first letter in uppercase.
 -}
+toCamelCaseUpper : String -> String
 toCamelCaseUpper name =
     convertCase name "" True True
 
 
 {-| Converts a string to camel case with the first letter in lowercase.
 -}
+toCamelCaseLower : String -> String
 toCamelCaseLower name =
     convertCase name "" False True
 
 
 {-| Converts a string to snake case with the first letter in uppercase.
 -}
+toSnakeCaseUpper : String -> String
 toSnakeCaseUpper name =
     convertCase name "_" True True
 
 
 {-| Converts a string to snake case with the first letter in lowercase.
 -}
+toSnakeCaseLower : String -> String
 toSnakeCaseLower name =
     convertCase name "_" False False
 
 
 {-| Converts a string to kebab case with the first letter in uppercase.
 -}
+toKebabCaseUpper : String -> String
 toKebabCaseUpper name =
     convertCase name "-" True True
 
 
 {-| Converts a string to kebab case with the first letter in lowercase.
 -}
+toKebabCaseLower : String -> String
 toKebabCaseLower name =
     convertCase name "-" False False
