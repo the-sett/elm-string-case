@@ -19,7 +19,9 @@ module String.Case
 -}
 convertCase : String -> Bool -> Bool -> String -> String
 convertCase separator firstLetterUpper firstLetterOfWordUpper value =
-    ""
+    split firstLetterUpper firstLetterOfWordUpper value
+        |> List.intersperse separator
+        |> String.concat
 
 
 {-| Used to track the state of the machine that extracts words from variable names.
@@ -84,8 +86,8 @@ The string is processed into words by these rules.
 6.  W after U or L is discarded and ends the current word.
 
 -}
-split : String -> List String
-split val =
+split : Bool -> Bool -> String -> List String
+split firstLetterUpper firstLetterOfWordUpper value =
     let
         start =
             { machine = Initial
@@ -95,6 +97,17 @@ split val =
             , currentWord = []
             , words = []
             }
+
+        -- Conditionally word breaks at the current character
+        -- The state is modified with the current word appended onto the output
+        -- and the current word cleared to begin a new one, when the condition
+        -- flag is set to True.
+        wordBreak : Bool -> State -> State
+        wordBreak condition state =
+            if condition then
+                { state | words = state.words, currentWord = state.currentWord }
+            else
+                { state | words = (String.fromList state.currentWord) :: state.words, currentWord = [] }
 
         stateFn : Char -> State -> State
         stateFn char state =
@@ -109,30 +122,42 @@ split val =
         stateTxUpperCase char state =
             case state.machine of
                 Initial ->
-                    -- state = WordMachineState.StartWord;
-                    -- upper = firstLetterOfWordUpper;
-                    -- if (!firstWord) {
-                    --     result.append(separator);
-                    -- }
-                    -- firstWord = false;
-                    state
+                    { state
+                        | machine = StartWord
+                        , upper = firstLetterOfWordUpper
+                        , firstWord = False
+                        , firstLetter = False
+                    }
+                        |> wordBreak state.firstWord
 
+                -- if (!firstWord) {
+                --     result.append(separator);
+                -- }
+                -- firstWord = false;
                 StartWord ->
-                    -- state = WordMachineState.ContinueWordCaps;
-                    -- upper = false;
-                    state
+                    { state
+                        | machine = ContinueWordCaps
+                        , upper = False
+                        , firstLetter = False
+                    }
 
                 ContinueWordCaps ->
-                    -- state = WordMachineState.ContinueWordCaps;
-                    -- upper = false;
-                    state
+                    { state
+                        | machine = ContinueWordCaps
+                        , upper = False
+                        , firstLetter = False
+                    }
 
                 ContinueWordLower ->
-                    -- state = WordMachineState.StartWord;
-                    -- upper = firstLetterOfWordUpper;
-                    -- result.append(separator);
-                    state
+                    { state
+                        | machine = StartWord
+                        , upper = firstLetterOfWordUpper
+                        , firstLetter = False
+                    }
 
+        -- result.append(separator);
+        --
+        -- ALL:
         --             writeChar.apply(nextChar, (!firstLetter && upper) || (firstLetter & firstLetterUpper));
         --             firstLetter = false;
         stateTxLetterOrDigit : Char -> State -> State
@@ -185,7 +210,7 @@ split val =
 
         --             upper = false;
     in
-        List.foldl (\char -> \state -> state) start (String.toList val)
+        List.foldl (\char -> \state -> state) start (String.toList value)
             |> .words
 
 
