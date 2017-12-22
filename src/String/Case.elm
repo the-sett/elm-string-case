@@ -18,6 +18,7 @@ import Char
 
 
 {-| Converts string between various case forms such as camel case, snake case or kebab case.
+Strings are split into words on capital letters or whitespace.
 For example, to convert to space case with the first letter of the first word capitalized and
 the first letters of subsequent words in lower case:
 
