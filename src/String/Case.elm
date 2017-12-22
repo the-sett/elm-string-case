@@ -18,6 +18,11 @@ import Char
 
 
 {-| Converts string between various case forms such as camel case, snake case or kebab case.
+For example, to convert to space case with the first letter of the first word capitalized and
+the first letters of subsequent words in lower case:
+
+    (convertCase " " True False "convertToSpaceCase") == "Convert to space case"
+
 -}
 convertCase : String -> Bool -> Bool -> String -> String
 convertCase separator firstLetterUpper firstLetterOfWordUpper value =
