@@ -14,12 +14,15 @@ module String.Case
 @docs toSnakeCaseLower, toKebabCaseUpper, toKebabCaseLower
 -}
 
+import Char
+
 
 {-| Converts string between various case forms such as camel case, snake case or kebab case.
 -}
 convertCase : String -> Bool -> Bool -> String -> String
 convertCase separator firstLetterUpper firstLetterOfWordUpper value =
     split firstLetterUpper firstLetterOfWordUpper value
+        |> List.reverse
         |> List.intersperse separator
         |> String.concat
 
@@ -59,13 +62,13 @@ type WordMachineState
 
 
 isUpperCase : Char -> Bool
-isUpperCase char =
-    False
+isUpperCase =
+    Char.isUpper
 
 
 isLetterOrDigit : Char -> Bool
 isLetterOrDigit char =
-    False
+    Char.isUpper char || Char.isLower char || Char.isDigit char
 
 
 {-| Splits a string into a list of words.
@@ -105,9 +108,17 @@ split firstLetterUpper firstLetterOfWordUpper value =
         wordBreak : Bool -> State -> State
         wordBreak condition state =
             if condition then
-                { state | words = state.words, currentWord = state.currentWord }
+                { state | words = (String.fromList <| List.reverse state.currentWord) :: state.words, currentWord = [] }
             else
-                { state | words = (String.fromList state.currentWord) :: state.words, currentWord = [] }
+                { state | words = state.words, currentWord = state.currentWord }
+
+        -- Appends a character to the current word, in upper or lower case.
+        writeChar : Char -> State -> State
+        writeChar char state =
+            if ((not state.firstLetter && state.upper) || (state.firstLetter && firstLetterUpper)) then
+                { state | currentWord = Char.toUpper char :: state.currentWord }
+            else
+                { state | currentWord = Char.toLower char :: state.currentWord }
 
         stateFn : Char -> State -> State
         stateFn char state =
@@ -120,97 +131,86 @@ split firstLetterUpper firstLetterOfWordUpper value =
 
         stateTxUpperCase : Char -> State -> State
         stateTxUpperCase char state =
-            case state.machine of
+            (case state.machine of
                 Initial ->
                     { state
                         | machine = StartWord
                         , upper = firstLetterOfWordUpper
                         , firstWord = False
-                        , firstLetter = False
                     }
-                        |> wordBreak state.firstWord
+                        |> wordBreak (not state.firstWord)
 
-                -- if (!firstWord) {
-                --     result.append(separator);
-                -- }
-                -- firstWord = false;
                 StartWord ->
                     { state
                         | machine = ContinueWordCaps
                         , upper = False
-                        , firstLetter = False
                     }
 
                 ContinueWordCaps ->
                     { state
                         | machine = ContinueWordCaps
                         , upper = False
-                        , firstLetter = False
                     }
 
                 ContinueWordLower ->
                     { state
                         | machine = StartWord
                         , upper = firstLetterOfWordUpper
-                        , firstLetter = False
                     }
+                        |> wordBreak True
+            )
+                |> writeChar char
+                |> (\state -> { state | firstLetter = False })
 
-        -- result.append(separator);
-        --
-        -- ALL:
-        --             writeChar.apply(nextChar, (!firstLetter && upper) || (firstLetter & firstLetterUpper));
-        --             firstLetter = false;
         stateTxLetterOrDigit : Char -> State -> State
         stateTxLetterOrDigit char state =
-            case state.machine of
+            (case state.machine of
                 Initial ->
-                    -- state = WordMachineState.StartWord;
-                    -- upper = firstLetterOfWordUpper;
-                    -- if (!firstWord) {
-                    --     result.append(separator);
-                    -- }
-                    -- firstWord = false;
-                    state
+                    { state
+                        | machine = StartWord
+                        , upper = firstLetterOfWordUpper
+                        , firstWord = False
+                    }
+                        |> wordBreak (not state.firstWord)
 
                 StartWord ->
-                    -- state = WordMachineState.ContinueWordLower;
-                    -- upper = false;
-                    state
+                    { state
+                        | machine = ContinueWordLower
+                        , upper = False
+                    }
 
                 ContinueWordCaps ->
-                    -- state = WordMachineState.ContinueWordLower;
-                    -- upper = false;
-                    state
+                    { state
+                        | machine = ContinueWordLower
+                        , upper = False
+                    }
 
                 ContinueWordLower ->
-                    -- state = WordMachineState.ContinueWordLower;
-                    -- upper = false;
-                    state
+                    { state
+                        | machine = ContinueWordLower
+                        , upper = False
+                    }
+            )
+                |> writeChar char
+                |> (\state -> { state | firstLetter = False })
 
-        --             writeChar.apply(nextChar, (!firstLetter && upper) || (firstLetter & firstLetterUpper));
-        --             firstLetter = false;
         stateTxWhitespace : Char -> State -> State
         stateTxWhitespace char state =
-            case state.machine of
-                Initial ->
-                    -- state = WordMachineState.Initial;
-                    state
+            { state
+                | machine = Initial
+                , upper = False
+            }
 
-                StartWord ->
-                    -- state = WordMachineState.Initial;
-                    state
-
-                ContinueWordCaps ->
-                    -- state = WordMachineState.Initial;
-                    state
-
-                ContinueWordLower ->
-                    -- state = WordMachineState.Initial;
-                    state
-
-        --             upper = false;
+        -- Appends the last (current) word if there is one.
+        appendLastWord : State -> State
+        appendLastWord state =
+            if state.currentWord == [] then
+                state
+            else
+                wordBreak True state
     in
-        List.foldl (\char -> \state -> state) start (String.toList value)
+        List.foldl (\char -> \state -> stateFn char state) start (String.toList value)
+            |> appendLastWord
             |> .words
 
 
