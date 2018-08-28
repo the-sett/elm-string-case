@@ -3,7 +3,7 @@
     "name": "the-sett/elm-string-case",
     "summary": "A library for converting between camel-case, snake-case, kebab-case and so on.",
     "license": "BSD-3-Clause",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "exposed-modules": [
         "String.Case"
     ],
@@ -12,7 +12,7 @@
         "elm/core": "1.0.0 <= v < 2.0.0"
     },
     "test-dependencies": {
-        "elm-explorations/test": "1.0.0 <= v < 2.0.0",
-        "elm-community/list-extra": "8.0.0 <= v < 9.0.0"        
+        "elm-community/list-extra": "8.0.0 <= v < 9.0.0",
+        "elm-explorations/test": "1.0.0 <= v < 2.0.0"
     }
 }
