@@ -1,17 +1,13 @@
-module String.Case
-    exposing
-        ( convertCase
-        , toCamelCaseUpper
-        , toCamelCaseLower
-        , toSnakeCaseUpper
-        , toSnakeCaseLower
-        , toKebabCaseUpper
-        , toKebabCaseLower
-        )
+module String.Case exposing
+    ( convertCase, toCamelCaseUpper, toCamelCaseLower, toSnakeCaseUpper
+    , toSnakeCaseLower, toKebabCaseUpper, toKebabCaseLower
+    )
 
 {-| String functions that are useful when working with source code.
+
 @docs convertCase, toCamelCaseUpper, toCamelCaseLower, toSnakeCaseUpper
 @docs toSnakeCaseLower, toKebabCaseUpper, toKebabCaseLower
+
 -}
 
 import Char
@@ -22,7 +18,7 @@ Strings are split into words on capital letters or whitespace.
 For example, to convert to space case with the first letter of the first word capitalized and
 the first letters of subsequent words in lower case:
 
-    (convertCase " " True False "convertToSpaceCase") == "Convert to space case"
+    convertCase " " True False "convertToSpaceCase" == "Convert to space case"
 
 -}
 convertCase : String -> Bool -> Bool -> String -> String
@@ -115,14 +111,16 @@ split firstLetterUpper firstLetterOfWordUpper value =
         wordBreak condition state =
             if condition then
                 { state | words = (String.fromList <| List.reverse state.currentWord) :: state.words, currentWord = [] }
+
             else
                 { state | words = state.words, currentWord = state.currentWord }
 
         -- Appends a character to the current word, in upper or lower case.
         writeChar : Char -> State -> State
         writeChar char state =
-            if ((not state.firstLetter && state.upper) || (state.firstLetter && firstLetterUpper)) then
+            if (not state.firstLetter && state.upper) || (state.firstLetter && firstLetterUpper) then
                 { state | currentWord = Char.toUpper char :: state.currentWord }
+
             else
                 { state | currentWord = Char.toLower char :: state.currentWord }
 
@@ -130,8 +128,10 @@ split firstLetterUpper firstLetterOfWordUpper value =
         stateFn char state =
             if isUpperCase char then
                 stateTxUpperCase char state
+
             else if isLetterOrDigit char then
                 stateTxLetterOrDigit char state
+
             else
                 stateTxWhitespace char state
 
@@ -166,7 +166,7 @@ split firstLetterUpper firstLetterOfWordUpper value =
                         |> wordBreak True
             )
                 |> writeChar char
-                |> (\state -> { state | firstLetter = False })
+                |> (\nextState -> { nextState | firstLetter = False })
 
         stateTxLetterOrDigit : Char -> State -> State
         stateTxLetterOrDigit char state =
@@ -198,7 +198,7 @@ split firstLetterUpper firstLetterOfWordUpper value =
                     }
             )
                 |> writeChar char
-                |> (\state -> { state | firstLetter = False })
+                |> (\nextState -> { nextState | firstLetter = False })
 
         stateTxWhitespace : Char -> State -> State
         stateTxWhitespace char state =
@@ -212,12 +212,13 @@ split firstLetterUpper firstLetterOfWordUpper value =
         appendLastWord state =
             if state.currentWord == [] then
                 state
+
             else
                 wordBreak True state
     in
-        List.foldl (\char -> \state -> stateFn char state) start (String.toList value)
-            |> appendLastWord
-            |> .words
+    List.foldl (\char -> \state -> stateFn char state) start (String.toList value)
+        |> appendLastWord
+        |> .words
 
 
 {-| Converts a string to camel case with the first letter in uppercase.
